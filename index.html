@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Is It Music?</title>
+<meta name="description" content="Hear very short sounds and swipe: music, or not music. Stop whenever you like.">
+<style>
+:root{ --bg:#0f1420; --ink:#fff; --muted:#b9c2d3; --yes:#2ee59d; --no:#ff6b81; --accent:#ffc46b; --panel:#1b2335; }
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  min-height:100vh; min-height:100dvh; color:var(--ink);
+  background:radial-gradient(120% 80% at 50% 0%, #243252 0%, var(--bg) 60%) fixed;
+  font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  display:flex; justify-content:center; -webkit-tap-highlight-color:transparent;
+}
+.app{width:min(440px,100%); min-height:100vh; min-height:100dvh; padding:16px 16px calc(16px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:12px}
+header{display:flex; align-items:center; justify-content:space-between; gap:12px}
+h1{margin:0; font-size:20px}
+h1 span{color:var(--accent)}
+.count{color:var(--muted); font-size:14px; font-variant-numeric:tabular-nums}
+.bar{height:6px; border-radius:3px; background:#ffffff1f; overflow:hidden}
+.bar i{display:block; height:100%; background:linear-gradient(90deg,var(--no),var(--yes)); transition:width .3s}
+#view{display:flex; flex-direction:column; gap:12px; flex:1}
+
+.stage{position:relative; flex:1; min-height:320px; max-height:520px; margin-top:4px}
+.behind,.card{position:absolute; inset:0; border-radius:24px}
+.behind{background:var(--panel); transform:scale(.94) translateY(14px); opacity:.7}
+.card{
+  display:flex; flex-direction:column; padding:20px; overflow:hidden; touch-action:none; cursor:grab; user-select:none;
+  background:linear-gradient(160deg,#34476f,#18233a);
+  box-shadow:0 18px 40px #0008; will-change:transform;
+}
+.card:active{cursor:grabbing}
+.mystery{font-size:15px; opacity:.9; letter-spacing:.4px}
+.viz{display:flex; align-items:flex-end; gap:4px; flex:1; min-height:120px; padding:18px 0}
+.viz i{flex:1; background:#ffffffcc; border-radius:3px 3px 0 0; height:6%; transition:height .06s}
+.who{font-size:24px; font-weight:700}
+.sub{margin:4px 0 0; opacity:.85; font-size:15px}
+.stamp{position:absolute; top:26px; padding:2px 10px; border:4px solid; border-radius:10px; font-size:26px; font-weight:800; letter-spacing:1px; opacity:0; pointer-events:none}
+.stamp.yes{left:16px; color:var(--yes); transform:rotate(-12deg)}
+.stamp.no{right:16px; color:var(--no); transform:rotate(12deg)}
+
+.controls{display:flex; justify-content:center; align-items:center; gap:14px; padding-top:4px}
+.big{min-width:150px; height:64px; border-radius:99px; border:0; background:var(--panel); color:var(--ink); font-size:18px; font-weight:700; cursor:pointer; box-shadow:0 6px 16px #0006; padding:0 18px}
+.big.no{color:var(--no)} .big.yes{color:var(--yes)}
+.rb{width:46px; height:46px; border-radius:50%; border:0; background:var(--panel); color:var(--ink); font-size:20px; cursor:pointer}
+.big:focus-visible,.rb:focus-visible,.btn:focus-visible,summary:focus-visible{outline:3px solid #fff; outline-offset:3px}
+.hint{text-align:center; color:var(--muted); font-size:13px; margin:0}
+.donebar{display:flex; flex-direction:column; align-items:center; gap:6px}
+
+.panel{flex:1; display:flex; flex-direction:column; gap:14px; justify-content:center}
+.panel.top{justify-content:flex-start}
+.panel h2{margin:0; font-size:30px}
+.panel h3{margin:8px 0 0}
+.panel p{margin:0; color:var(--muted)}
+.t{font-size:13px; color:var(--muted)}
+.btn{align-self:flex-start; padding:14px 26px; border:0; border-radius:99px; font-size:17px; font-weight:700; color:#10131c; background:linear-gradient(90deg,#ff7a93,var(--accent)); cursor:pointer}
+.btn.ghost{background:var(--panel); color:var(--ink); font-weight:600; font-size:15px; padding:10px 18px}
+.btn[disabled]{opacity:.45; cursor:default}
+.row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+.check{display:flex; gap:10px; align-items:flex-start; font-size:15px}
+.check input{margin-top:4px; width:20px; height:20px; flex:none}
+.check a{color:var(--accent)}
+.draftbar{background:#fff3a3; color:#3a2f00; border-radius:12px; padding:10px 12px; font-size:14px}
+.field{display:flex; flex-direction:column; gap:6px; margin-bottom:14px}
+.field label{font-size:15px}
+.field input,.field select{font:inherit; color:var(--ink); background:var(--panel); border:1px solid #ffffff33; border-radius:12px; padding:10px 12px; width:100%}
+.err{color:#ffb3c0}
+
+.catlist{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:8px}
+.catlist li{display:grid; grid-template-columns:150px 1fr 54px; gap:10px; align-items:center; font-size:15px}
+.catlist .track{height:14px; border-radius:7px; background:#ffffff1a; overflow:hidden}
+.catlist .track i{display:block; height:100%; background:linear-gradient(90deg,#ff7a93,var(--accent))}
+.catlist .m{font-variant-numeric:tabular-nums; text-align:right; color:var(--muted); font-size:13px}
+.groups{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
+.groups div{background:var(--panel); border-radius:14px; padding:12px; text-align:center}
+.groups b{display:block; font-size:26px}
+.list{margin:10px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:8px}
+.list li{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-radius:14px; background:var(--panel)}
+.list a{color:var(--muted)}
+details{color:var(--muted); font-size:14px}
+summary{cursor:pointer}
+.sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0)}
+@media (max-width:420px){ .catlist li{grid-template-columns:110px 1fr 50px} .big{min-width:130px} }
+@media (prefers-reduced-motion:reduce){ .bar i,.viz i{transition:none} }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Is It <span>Music?</span></h1>
+    <span class="count" id="count"></span>
+  </header>
+  <div class="bar" aria-hidden="true"><i id="prog" style="width:0%"></i></div>
+  <div id="view"></div>
+  <div class="sr" id="live" aria-live="polite"></div>
+</div>
+
+<script src="config.js"></script>
+<script>
+'use strict';
+
+// ---------- helpers ----------
+const $ = id => document.getElementById(id);
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const view = $('view');
+const safeUrl = u => /^https?:\/\//i.test(u || '') ? u : null;
+function el(tag, props, ...kids){
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})){
+    if (k === 'text') e.textContent = v; else if (k === 'class') e.className = v; else e.setAttribute(k, v);
+  }
+  kids.forEach(k => k != null && e.append(k));
+  return e;
+}
+const pickOne = a => a[Math.floor(Math.random() * a.length)];
+function shuffle(a){ for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+// ---------- study configuration (config.js) ----------
+const CFG = (() => {
+  const u = window.WIM_CONFIG || {};
+  return Object.assign({study:'Is It Music?', consentFile:'consent.html', consentVersion:'unset', participantPrefix:'WIM_'}, u,
+    {collect: Object.assign({enabled:false, endpoint:'', token:''}, u.collect || {}),
+     game: Object.assign({primeCount:5, minDone:5}, u.game || {}),
+     demographics: Object.assign({enabled:false, title:'About you', intro:'', questions:[]}, u.demographics || {}),
+     minors: Object.assign({enabled:false, mode:'separate', minAge:0, consentFile:'consent_minor.html', consentVersion:'unset',
+                            participantPrefix:'WIM_U18_', keepQuestions:null}, u.minors || {})});
+})();
+const PRIME_N = CFG.game.primeCount, MIN_DONE = CFG.game.minDone;
+let consent = null, pid = null, startedAt = null, demo = {}, ageGroup = null, sessionId = null;
+function makePid(prefix){
+  const q = new URLSearchParams(location.search).get('p');
+  if (q) return prefix + q.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 30);
+  const b = new Uint8Array(5); crypto.getRandomValues(b);
+  return prefix + [...b].map(x => x.toString(36).padStart(2, '0')).join('').slice(0, 8).toUpperCase();
+}
+
+// ---------- the corpus and how clips are chosen ----------
+let clips = [], byCat = {}, TAX = null, DURATION = 5;
+let seen = new Set(), results = [], cur = null, mode = 'intro', busy = false;
+const catName = c => (TAX && TAX.categories[c] && TAX.categories[c].label) || c;
+const groupName = g => (TAX && TAX.groups[g]) || g;
+
+// The first PRIME_N clips are clear music (a different kind each time). After that every clip is drawn at random:
+// a category uniformly at random (so rare categories turn up as often as big ones), then a clip within it.
+function unseenIn(cat, extra){ return byCat[cat].filter(c => !seen.has(c.id) && c.id !== extra); }
+// `pending` is the clip currently on screen (not yet answered), so the next pick can be made, and preloaded, in advance.
+function pickNext(pending){
+  const idx = results.length + (pending ? 1 : 0), pid_ = pending ? pending.clip.id : null;
+  let cats = null, phase = 'random';
+  if (idx < PRIME_N){
+    const used = new Set(results.map(r => r.clip.category));
+    if (pending) used.add(pending.clip.category);
+    const prime = Object.keys(byCat).filter(k => TAX.categories[k] && TAX.categories[k].prime);
+    cats = prime.filter(k => !used.has(k) && unseenIn(k, pid_).length);
+    if (!cats.length) cats = prime.filter(k => unseenIn(k, pid_).length);
+    phase = 'prime';
+  }
+  if (!cats || !cats.length){ cats = Object.keys(byCat).filter(k => unseenIn(k, pid_).length); phase = 'random'; }
+  if (!cats.length) return null;
+  return {clip: pickOne(unseenIn(pickOne(cats), pid_)), phase};
+}
+let upcoming = null;
+
+// ---------- audio ----------
+let audio = null, ac = null, analyser = null, playStart = 0, loops = 0, lastT = 0;
+function ensureAudio(){
+  if (audio) { if (ac.state === 'suspended') ac.resume(); return; }
+  audio = new Audio(); audio.preload = 'auto'; audio.loop = true;
+  ac = new (window.AudioContext || window.webkitAudioContext)();
+  const src = ac.createMediaElementSource(audio);
+  analyser = ac.createAnalyser(); analyser.fftSize = 2048; analyser.smoothingTimeConstant = .6;
+  src.connect(analyser); analyser.connect(ac.destination);
+  audio.addEventListener('timeupdate', () => { if (audio.currentTime + 1 < lastT) loops++; lastT = audio.currentTime; });
+  audio.addEventListener('playing', () => { if (!playStart) playStart = performance.now(); });
+}
+function preload(c){ if (c){ const a = new Audio(); a.preload = 'auto'; a.src = 'corpus/' + c.file; } }
+
+// ---------- intro, consent, age gate ----------
+function setProgress(){
+  const n = results.length;
+  $('prog').style.width = mode === 'play' ? clamp(n / MIN_DONE, 0, 1) * 100 + '%' : mode === 'end' ? '100%' : '0%';
+  $('count').textContent = mode === 'play' ? `${n} answered` : '';
+}
+
+function showIntro(){
+  mode = 'intro'; setProgress();
+  const research = CFG.collect.enabled;
+  const draft = research && (/draft/i.test(CFG.consentVersion) || (CFG.minors.enabled && /draft/i.test(CFG.minors.consentVersion)));
+  const kids = [
+    draft ? el('div', {class:'draftbar', text:'Draft consent text: for testing only. Do not use with real participants until the IRB has approved it.'}) : null,
+    el('div', {text:'👂', style:'font-size:56px;line-height:1'}),
+    el('h2', {text:'Is it music?'}),
+    el('p', {text:'You’ll hear very short sounds, about 5 seconds each. For each one, decide: is this music, or not? Swipe right for music, left for not music, or tap the buttons.'}),
+    el('p', {text:'Some will be obviously music and some obviously not, and a lot will be in between. There are no right or wrong answers; go with your first reaction. Answer as many as you like, and stop whenever you want. Headphones help.'})
+  ];
+  const M = CFG.minors;
+  if (research){
+    const age = el('input', {type:'number', id:'age', name:'age', inputmode:'numeric', min:'1', max:'110', autocomplete:'off'});
+    const note = el('p', {class:'t', id:'agenote', role:'status'});
+    const agree = el('input', {type:'checkbox', id:'agree'});
+    const link = el('a', {href:CFG.consentFile, target:'_blank', rel:'noopener', text:'consent form'});
+    const lead = el('span', {text:'I have read the '});
+    const tail = el('span', {text:' (opens in a new tab), I am an adult, and I agree to take part.'});
+    const go = el('button', {class:'btn', id:'start', text:'I agree, start'}); go.disabled = true;
+    const solo = el('button', {class:'btn ghost', id:'solo', text:'Just play, don’t share my data'});
+    const refresh = () => {
+      const n = Number(age.value), valid = age.value !== '' && Number.isInteger(n) && n >= 1 && n <= 110;
+      const minor = valid && n < 18;
+      const collectMinors = minor && M.enabled && M.mode === 'separate' && n >= (M.minAge || 0);
+      let can = valid && agree.checked, msg = '';
+      if (age.value !== '' && !valid) msg = 'Please enter your age as a whole number.';
+      if (minor && !collectMinors){
+        can = false;
+        msg = M.enabled ? 'You can play, but nothing is saved for the study at your age. Choose “Just play” below.'
+                        : 'The study is for people 18 and over. You can still play: choose “Just play” below.';
+      } else if (collectMinors){
+        msg = 'Because you are under 18, a parent or guardian needs to read the consent form and agree before you take part. Your answers are kept separate from the adult study.';
+      }
+      link.setAttribute('href', collectMinors ? M.consentFile : CFG.consentFile);
+      lead.textContent = collectMinors ? 'My parent or guardian has read the ' : 'I have read the ';
+      tail.textContent = collectMinors ? ' (opens in a new tab) and agrees that I can take part, and I agree too.'
+                                       : ' (opens in a new tab), I am an adult, and I agree to take part.';
+      note.textContent = msg; go.disabled = !can;
+      return {n};
+    };
+    age.oninput = refresh; agree.onchange = refresh;
+    go.onclick = () => { const r = refresh(); if (!go.disabled) begin(true, r.n); };
+    solo.onclick = () => begin(false, null);
+    kids.push(
+      el('p', {text:'This is a research study by the Auditory Perception & Action Lab. If you agree, you’ll be asked a few optional background questions, and your answers are saved anonymously for the study. No name, email or audio is collected.'}),
+      el('div', {class:'field'}, el('label', {for:'age', text:'Your age in years'}), age),
+      note,
+      el('label', {class:'check'}, agree, el('span', null, lead, link, tail)),
+      el('div', {class:'row'}, go, solo));
+  } else {
+    const go = el('button', {class:'btn', id:'start', text:'Start (sound on)'});
+    go.onclick = () => begin(false, null);
+    kids.push(go);
+  }
+  kids.push(el('details', null,
+    el('summary', {text:`About the sounds (${clips.length.toLocaleString()} clips)`}),
+    el('p', {text:'Music is from the Free Music Archive (Creative Commons). Spoken recordings are public-domain LibriVox readings and Free Music Archive uploads. Everyday sounds are from ESC-50 / Freesound and Wikimedia Commons (Creative Commons). Every clip you hear is credited on your results page.'})));
+  view.replaceChildren(el('div', {class:'panel'}, ...kids));
+  $('start').focus();
+}
+
+function begin(share, ageYears){
+  const M = CFG.minors;
+  ageGroup = ageYears == null ? null : ageYears >= 18 ? 'adult' : 'under18';
+  const minor = ageGroup === 'under18';
+  consent = share && CFG.collect.enabled ? {at: new Date().toISOString(), version: minor ? M.consentVersion : CFG.consentVersion} : null;
+  pid = makePid(minor ? M.participantPrefix : CFG.participantPrefix);
+  startedAt = new Date().toISOString();
+  demo = consent && ageYears != null ? {age: String(ageYears)} : {};
+  const qs = activeQuestions();
+  if (consent && CFG.demographics.enabled && qs.length) showDemographics(qs);
+  else { if (consent) saveSoon(300); start(); }
+}
+function activeQuestions(){
+  const keep = ageGroup === 'under18' && CFG.minors.keepQuestions;
+  return CFG.demographics.questions.filter(q => !(q.id === 'age' && demo.age != null) && (!keep || keep.includes(q.id)));
+}
+function showDemographics(qs){
+  mode = 'intro'; setProgress();
+  const D = CFG.demographics, form = el('form', {novalidate: ''});
+  qs.forEach(q => {
+    const id = 'q_' + q.id;
+    let input;
+    if (q.type === 'select'){
+      input = el('select', {id, name: q.id});
+      input.append(el('option', {value: '', text: 'Choose…'}));
+      q.options.forEach(o => input.append(el('option', {value: o, text: o})));
+    } else if (q.type === 'number'){
+      input = el('input', {id, name: q.id, type: 'number', inputmode: 'numeric', autocomplete: 'off'});
+      if (q.min != null) input.min = q.min;
+      if (q.max != null) input.max = q.max;
+    } else {
+      input = el('input', {id, name: q.id, type: 'text', autocomplete: 'off', maxlength: q.maxLength || 60});
+    }
+    form.append(el('div', {class: 'field'}, el('label', {for: id, text: q.label}), input));
+  });
+  const msg = el('p', {class: 'err', id: 'demoerr', role: 'alert'});
+  form.append(msg, el('div', {class: 'row'}, el('button', {class: 'btn', type: 'submit', text: 'Continue'})));
+  form.onsubmit = e => {
+    e.preventDefault();
+    const out = {};
+    for (const q of qs){
+      let v = String(form.elements[q.id].value || '').replace(/[\u0000-\u001f]/g, ' ').replace(/\s+/g, ' ').trim();
+      if (q.type === 'number' && v !== ''){
+        const n = Number(v);
+        if (!isFinite(n) || (q.min != null && n < q.min) || (q.max != null && n > q.max)){
+          msg.textContent = `“${q.label}”: please enter a number${q.min != null && q.max != null ? ` between ${q.min} and ${q.max}` : ''}, or leave it blank.`;
+          form.elements[q.id].focus();
+          return;
+        }
+        v = String(Math.round(n));
+      }
+      out[q.id] = v;
+    }
+    demo = Object.assign({}, demo, out);
+    saveSoon(300);
+    start();
+  };
+  view.replaceChildren(el('div', {class: 'panel top'}, el('h2', {text: D.title}), D.intro ? el('p', {text: D.intro}) : null, form));
+  const first = form.querySelector('input,select'); if (first) first.focus();
+}
+
+// ---------- the swiping ----------
+let vizRaf = 0, replays = 0;
+function start(){
+  ensureAudio();
+  sessionId = Math.random().toString(36).slice(2, 10);
+  seen = new Set(); results = []; busy = false; mode = 'play'; upcoming = null;
+  cur = pickNext(null);
+  showCard();
+}
+
+function showCard(){
+  if (!cur){ showResults(); return; }
+  const c = cur.clip;
+  seen.add(c.id);
+  setProgress();
+  replays = 0; loops = 0; playStart = 0; lastT = 0;
+  const left = Math.max(0, MIN_DONE - results.length);
+  const bars = el('div', {class:'viz', 'aria-hidden':'true'});
+  for (let i = 0; i < 14; i++) bars.append(el('i'));
+  const card = el('div', {class:'card', id:'card', 'aria-label':'Mystery sound'},
+    el('div', {class:'stamp yes', text:'MUSIC'}), el('div', {class:'stamp no', text:'NOT MUSIC'}),
+    el('div', {class:'mystery', text:`Mystery sound ${results.length + 1}`}),
+    bars,
+    el('div', null,
+      el('div', {class:'who', text:'Is this music?'}),
+      el('p', {class:'sub', text:'Swipe right for music, left for not music.'})));
+  const done = el('button', {class:'btn ghost', id:'done', text: left ? `Keep going: ${left} more to see your results` : 'I’m done: show my results'});
+  if (left) done.disabled = true;
+  view.replaceChildren(
+    el('div', {class:'stage'}, el('div', {class:'behind'}), card),
+    el('div', {class:'controls'},
+      el('button', {class:'big no', id:'no', 'aria-label':'Not music (left arrow)', text:'✕ Not music'}),
+      el('button', {class:'rb', id:'replay', 'aria-label':'Replay from the start', text:'↺'}),
+      el('button', {class:'big yes', id:'yes', 'aria-label':'Music (right arrow)', text:'♪ Music'})),
+    el('div', {class:'donebar'}, done,
+      el('p', {class:'hint', id:'hint', text:'Drag the card, or use ← and → keys. Answer as fast as you like.'})));
+  $('live').textContent = `Sound ${results.length + 1}.`;
+  $('no').onclick = () => decide(false);
+  $('yes').onclick = () => decide(true);
+  $('replay').onclick = () => { replays++; audio.currentTime = 0; audio.play(); };
+  done.onclick = () => { if (!busy && results.length >= MIN_DONE) showResults(); };
+  wireDrag(card);
+  audio.src = 'corpus/' + c.file; audio.currentTime = 0;
+  const p = audio.play();
+  if (p && p.catch) p.catch(() => { $('hint').textContent = 'Tap ↺ to start the sound.'; });
+  runViz();
+  upcoming = pickNext(cur);                  // chosen now so it can load while this one plays
+  if (upcoming) preload(upcoming.clip);
+}
+
+function runViz(){
+  cancelAnimationFrame(vizRaf);
+  const bars = Array.from(document.querySelectorAll('.viz i')), data = new Uint8Array(analyser.frequencyBinCount);
+  (function frame(){
+    analyser.getByteFrequencyData(data);
+    bars.forEach((b, i) => {
+      const lo = Math.round(2 * Math.pow(90, i / bars.length)), hi = Math.max(lo + 1, Math.round(2 * Math.pow(90, (i + 1) / bars.length)));
+      let m = 0; for (let k = lo; k < hi; k++) m = Math.max(m, data[k]);
+      b.style.height = clamp(6 + Math.pow(m / 255, 2.4) * 94, 6, 100) + '%';
+    });
+    vizRaf = requestAnimationFrame(frame);
+  })();
+}
+
+function wireDrag(card){
+  const yes = card.querySelector('.stamp.yes'), no = card.querySelector('.stamp.no');
+  let sx = 0, dx = 0, down = false, lt = 0, vx = 0;
+  const paint = () => {
+    card.style.transform = `translate(${dx}px, ${Math.abs(dx) * .12}px) rotate(${dx / 18}deg)`;
+    yes.style.opacity = clamp(dx / 100, 0, 1); no.style.opacity = clamp(-dx / 100, 0, 1);
+  };
+  card.addEventListener('pointerdown', e => { if (busy) return; down = true; sx = e.clientX; dx = 0; vx = 0; lt = e.timeStamp; card.style.transition = 'none'; card.setPointerCapture(e.pointerId); });
+  card.addEventListener('pointermove', e => {
+    if (!down) return;
+    const nx = e.clientX - sx, dt = Math.max(1, e.timeStamp - lt);
+    vx = (nx - dx) / dt; dx = nx; lt = e.timeStamp; paint();
+  });
+  const end = () => {
+    if (!down) return; down = false;
+    if (Math.abs(dx) > 110 || Math.abs(vx) > .8 && Math.abs(dx) > 40) decide(dx > 0);
+    else { card.style.transition = 'transform .25s'; dx = 0; paint(); }
+  };
+  card.addEventListener('pointerup', end);
+  card.addEventListener('pointercancel', end);
+}
+
+function decide(isMusic){
+  if (busy || mode !== 'play' || !cur) return;
+  busy = true;
+  const card = $('card');
+  const rt = playStart ? Math.round(performance.now() - playStart) : null;
+  results.push({clip: cur.clip, music: isMusic, phase: cur.phase, trial: results.length + 1, rt, loops: loops + 1, replays});
+  if (results.length % 5 === 0) saveSoon(300);
+  audio.pause();
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  card.style.transition = reduce ? 'opacity .15s' : 'transform .3s ease-in, opacity .3s';
+  card.style.opacity = 0;
+  if (!reduce) card.style.transform = `translate(${(isMusic ? 1 : -1) * innerWidth}px, -40px) rotate(${isMusic ? 30 : -30}deg)`;
+  setTimeout(() => { busy = false; cur = upcoming || pickNext(null); upcoming = null; showCard(); }, reduce ? 140 : 290);
+}
+
+// ---------- data files and saving ----------
+function csvCell(v){
+  let s = v == null ? '' : String(v);
+  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+  return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+function csvText(){
+  const demoIds = CFG.demographics.enabled ? CFG.demographics.questions.map(q => q.id) : [];
+  const head = ['participant','session','trial','phase','clip_id','group','family','category','source_class','response','rt_ms','loops','replays',
+                'age_group', ...demoIds.map(id => 'demo_' + id)];
+  const rows = results.map(r => [pid, sessionId, r.trial, r.phase, r.clip.id, r.clip.group, r.clip.family, r.clip.category, r.clip.source_class,
+                                 r.music ? 'music' : 'not_music', r.rt, r.loops, r.replays, ageGroup || '', ...demoIds.map(id => demo[id] == null ? '' : demo[id])]);
+  return [head, ...rows].map(r => r.map(csvCell).join(',')).join('\n') + '\n';
+}
+function download(name, text, type){
+  const a = el('a', {href:URL.createObjectURL(new Blob([text], {type})), download:name});
+  document.body.append(a); a.click(); a.remove();
+}
+const canSend = () => CFG.collect.enabled && !!consent && !!CFG.collect.endpoint && !!pid;
+let sending = null, saveNote = '', saveTimer = 0;
+function sessionJson(){
+  return JSON.stringify({participant: pid, session: sessionId, study: CFG.study, ageGroup, consentVersion: consent && consent.version,
+    consentAt: consent && consent.at, startedAt, savedAt: new Date().toISOString(), responses: results.length, clips: clips.length,
+    demographics: demo, settings: {PRIME_N, MIN_DONE, DURATION}}, null, 2);
+}
+function filesNow(){
+  const base = `${pid}_${sessionId || 'none'}`;
+  return [
+    {name: `${base}_responses.csv`, mime: 'text/csv', text: csvText()},
+    {name: `${base}_session.json`, mime: 'application/json', text: sessionJson()},
+    {name: `${pid}_CONSENT.txt`, mime: 'text/plain', text: `consent_version=${consent.version}\naccepted_at=${consent.at}\nparticipant=${pid}\nage_group=${ageGroup || ''}\n`}
+  ];
+}
+const payload = () => JSON.stringify({token: CFG.collect.token, participant: pid, group: ageGroup === 'under18' ? 'under18' : 'adult',
+                                      consentVersion: consent.version, files: filesNow()});
+function statusText(){
+  if (!CFG.collect.enabled) return 'Your results stay on this device. Nothing was sent anywhere.';
+  if (!consent) return 'You chose not to share data, so nothing was sent.';
+  if (!CFG.collect.endpoint) return 'Your results are on this device only: the study server is not connected. You can download them below.';
+  if (sending) return 'Saving your results to the study…';
+  if (saveNote === 'saved') return 'Your results were saved to the study. Thank you!';
+  if (saveNote === 'failed') return 'We could not reach the study server. Please download your results below; the researcher will tell you where to send them.';
+  return '';
+}
+function updateSaveStatus(){ const p = $('savestatus'); if (p) p.textContent = statusText(); }
+function flush(){
+  if (!canSend()) return Promise.resolve({skipped: true});
+  if (sending) return sending;
+  sending = (async () => {
+    const body = payload();
+    let err;
+    for (let i = 0; i < 3; i++){
+      try {
+        const r = await fetch(CFG.collect.endpoint, {method: 'POST', body});
+        const j = await r.json();
+        if (j && j.ok){ saveNote = 'saved'; return {ok: true}; }
+        err = new Error((j && j.error) || 'rejected');
+      } catch (e) { err = e; }
+      await new Promise(r => setTimeout(r, 600 * (i + 1)));
+    }
+    saveNote = 'failed';
+    return {ok: false, error: String(err)};
+  })().finally(() => { sending = null; updateSaveStatus(); });
+  updateSaveStatus();
+  return sending;
+}
+function saveSoon(ms = 1500){ if (canSend()){ clearTimeout(saveTimer); saveTimer = setTimeout(flush, ms); } }
+addEventListener('pagehide', () => {
+  if (!canSend() || !navigator.sendBeacon || !pid || !(results && results.length || Object.keys(demo).length)) return;
+  const body = payload();
+  if (body.length < 60000) navigator.sendBeacon(CFG.collect.endpoint, new Blob([body], {type: 'text/plain'}));
+});
+
+// ---------- results ----------
+function pct(a, b){ return b ? Math.round(100 * a / b) : 0; }
+function showResults(){
+  mode = 'end'; setProgress(); cancelAnimationFrame(vizRaf); if (audio) audio.pause();
+  clearTimeout(saveTimer); flush();
+  const tally = (keyFn) => {
+    const m = {};
+    results.forEach(r => { const k = keyFn(r.clip); (m[k] = m[k] || {n: 0, music: 0}); m[k].n++; if (r.music) m[k].music++; });
+    return m;
+  };
+  const byGroup = tally(c => c.group), byCategory = tally(c => c.category);
+  const groups = el('div', {class:'groups'});
+  Object.keys(TAX.groups).forEach(g => {
+    const x = byGroup[g];
+    groups.append(el('div', null, el('b', {text: x ? pct(x.music, x.n) + '%' : '–'}), el('span', {class:'t', text:`${groupName(g)}${x ? ` (${x.n})` : ''}`})));
+  });
+  const catList = el('ul', {class:'catlist'});
+  Object.entries(byCategory).sort((a, b) => b[1].music / b[1].n - a[1].music / a[1].n || b[1].n - a[1].n).forEach(([c, x]) => {
+    catList.append(el('li', null, el('span', {text: catName(c)}),
+      el('span', {class:'track'}, el('i', {style:`width:${pct(x.music, x.n)}%`})),
+      el('span', {class:'m', text:`${x.music}/${x.n}`})));
+  });
+  const surprises = results.filter(r => (r.clip.group !== 'music' && r.music) || (r.clip.group === 'music' && !r.music));
+  const heard = el('ul', {class:'list'});
+  results.forEach(r => {
+    const c = r.clip, src = safeUrl(c.source_url);
+    heard.append(el('li', null,
+      el('span', null, `${r.music ? '♪' : '✕'} ${c.title}`, el('br'),
+        el('span', {class:'t'}, `${catName(c.category)}${c.creator ? ' · ' + c.creator : ''} · ${c.source} · `,
+          src ? el('a', {href:src, target:'_blank', rel:'noopener noreferrer', text:'source'}) : '')),
+      el('span', {class:'t', text:(c.licence || '').split(' (')[0].slice(0, 26)})));
+  });
+  view.replaceChildren(el('div', {class:'panel top'},
+    el('h2', {text:'Where you draw the line'}),
+    el('p', {text:`You answered ${results.length} sound${results.length === 1 ? '' : 's'}. Here is how often you said “music”.`}),
+    groups,
+    el('h3', {text:'By kind of sound'}),
+    catList,
+    surprises.length ? el('p', {text:`${surprises.length} of your answers went against the grain: sounds from outside music that you called music, or music you called not music. They are marked in the list below.`}) : null,
+    el('details', null, el('summary', {text:`Every sound you heard (${results.length})`}), heard),
+    el('p', {class:'t', text:'Credits: music from the Free Music Archive (Creative Commons), readings from LibriVox (public domain), everyday sounds from ESC-50 / Freesound and Wikimedia Commons (Creative Commons). See each source link.'}),
+    el('p', {class:'t', id:'savestatus', text:statusText()}),
+    consent ? el('p', {class:'t', text:`Your anonymous participant ID is ${pid}. Keep it if you ever want to ask for your data to be removed.`}) : null,
+    el('div', {class:'row'},
+      el('button', {class:'btn', id:'again', text:'Keep going'}),
+      el('button', {class:'btn ghost', id:'csv', text:'Download my results (CSV)'}))));
+  $('again').onclick = () => { mode = 'play'; busy = false; cur = pickNext(null); showCard(); };
+  $('csv').onclick = () => download(`is-it-music-${sessionId}.csv`, csvText(), 'text/csv');
+  $('live').textContent = 'Done. Your results are ready.';
+}
+
+document.addEventListener('keydown', e => {
+  if (mode !== 'play') return;
+  if (e.key === 'ArrowRight'){ e.preventDefault(); decide(true); }
+  else if (e.key === 'ArrowLeft'){ e.preventDefault(); decide(false); }
+  else if (e.key === ' ' && document.activeElement.tagName !== 'BUTTON'){ e.preventDefault(); replays++; audio.currentTime = 0; audio.play(); }
+});
+
+// ---------- boot ----------
+Promise.all([fetch('corpus/manifest.json').then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
+             fetch('corpus/taxonomy.json').then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })])
+  .then(([m, tax]) => {
+    clips = m.clips; DURATION = m.duration || 5; TAX = tax;
+    byCat = {};
+    clips.forEach(c => (byCat[c.category] = byCat[c.category] || []).push(c));
+    showIntro();
+  })
+  .catch(() => view.replaceChildren(el('div', {class:'panel'}, el('p', {class:'err', text:'Could not load the sounds. Serve this folder over http (not file://) and make sure corpus/manifest.json and corpus/taxonomy.json exist.'}))));
+</script>
+</body>
+</html>

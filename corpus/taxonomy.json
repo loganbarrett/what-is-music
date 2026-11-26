@@ -1,0 +1,334 @@
+{
+ "groups": {
+  "music": "Music",
+  "voice": "Voice (speech and chant)",
+  "sound": "Sounds"
+ },
+ "families": {
+  "popular": "Popular music",
+  "art_and_world": "Art and world music",
+  "experimental": "Experimental music",
+  "avant_garde": "Avant-garde and sound art",
+  "read_speech": "Read speech",
+  "rhythmic_speech": "Rhythmic and ritual voice",
+  "spoken_art": "Spoken art",
+  "animals": "Animals",
+  "nature": "Nature",
+  "human_sounds": "Human sounds",
+  "tonal_nonmusic": "Tonal non-music",
+  "machines": "Machines",
+  "household": "Household",
+  "effects": "Sound effects"
+ },
+ "categories": {
+  "pop": {
+   "group": "music",
+   "family": "popular",
+   "label": "Pop",
+   "prime": true,
+   "n": 126
+  },
+  "rock": {
+   "group": "music",
+   "family": "popular",
+   "label": "Rock",
+   "prime": true,
+   "n": 127
+  },
+  "hip_hop": {
+   "group": "music",
+   "family": "popular",
+   "label": "Rap and hip-hop",
+   "prime": false,
+   "n": 127
+  },
+  "electronic": {
+   "group": "music",
+   "family": "popular",
+   "label": "Electronic",
+   "prime": true,
+   "n": 127
+  },
+  "soul_rnb": {
+   "group": "music",
+   "family": "popular",
+   "label": "Soul and R&B",
+   "prime": true,
+   "n": 27
+  },
+  "country": {
+   "group": "music",
+   "family": "popular",
+   "label": "Country",
+   "prime": true,
+   "n": 16
+  },
+  "folk": {
+   "group": "music",
+   "family": "popular",
+   "label": "Folk",
+   "prime": true,
+   "n": 127
+  },
+  "blues": {
+   "group": "music",
+   "family": "popular",
+   "label": "Blues",
+   "prime": true,
+   "n": 28
+  },
+  "jazz": {
+   "group": "music",
+   "family": "popular",
+   "label": "Jazz",
+   "prime": true,
+   "n": 115
+  },
+  "easy_listening": {
+   "group": "music",
+   "family": "popular",
+   "label": "Easy listening",
+   "prime": false,
+   "n": 11
+  },
+  "classical": {
+   "group": "music",
+   "family": "art_and_world",
+   "label": "Classical",
+   "prime": true,
+   "n": 127
+  },
+  "international": {
+   "group": "music",
+   "family": "art_and_world",
+   "label": "World music",
+   "prime": false,
+   "n": 127
+  },
+  "old_time": {
+   "group": "music",
+   "family": "art_and_world",
+   "label": "Historic recordings",
+   "prime": false,
+   "n": 127
+  },
+  "instrumental": {
+   "group": "music",
+   "family": "art_and_world",
+   "label": "Instrumental",
+   "prime": false,
+   "n": 127
+  },
+  "throat_singing": {
+   "group": "music",
+   "family": "art_and_world",
+   "label": "Throat and overtone singing",
+   "prime": false,
+   "n": 8
+  },
+  "experimental": {
+   "group": "music",
+   "family": "experimental",
+   "label": "Experimental",
+   "prime": false,
+   "n": 127
+  },
+  "drone": {
+   "group": "music",
+   "family": "avant_garde",
+   "label": "Drone",
+   "prime": false,
+   "n": 127
+  },
+  "ambient": {
+   "group": "music",
+   "family": "avant_garde",
+   "label": "Ambient",
+   "prime": false,
+   "n": 127
+  },
+  "noise": {
+   "group": "music",
+   "family": "avant_garde",
+   "label": "Noise",
+   "prime": false,
+   "n": 126
+  },
+  "musique_concrete": {
+   "group": "music",
+   "family": "avant_garde",
+   "label": "Musique concrète",
+   "prime": false,
+   "n": 127
+  },
+  "sound_art": {
+   "group": "music",
+   "family": "avant_garde",
+   "label": "Sound art and collage",
+   "prime": false,
+   "n": 127
+  },
+  "poetry": {
+   "group": "voice",
+   "family": "read_speech",
+   "label": "Poetry readings",
+   "prime": false,
+   "n": 125
+  },
+  "prose_english": {
+   "group": "voice",
+   "family": "read_speech",
+   "label": "Prose readings (English)",
+   "prime": false,
+   "n": 125
+  },
+  "foreign_speech": {
+   "group": "voice",
+   "family": "read_speech",
+   "label": "Speech in other languages",
+   "prime": false,
+   "n": 124
+  },
+  "nursery_rhymes": {
+   "group": "voice",
+   "family": "rhythmic_speech",
+   "label": "Nursery rhymes",
+   "prime": false,
+   "n": 68
+  },
+  "chant_prayer": {
+   "group": "voice",
+   "family": "rhythmic_speech",
+   "label": "Chant and prayer",
+   "prime": false,
+   "n": 8
+  },
+  "spoken_word": {
+   "group": "voice",
+   "family": "spoken_art",
+   "label": "Spoken word and talk",
+   "prime": false,
+   "n": 127
+  },
+  "poetry_archive": {
+   "group": "voice",
+   "family": "spoken_art",
+   "label": "Poetry (archive)",
+   "prime": false,
+   "n": 49
+  },
+  "sound_poetry": {
+   "group": "voice",
+   "family": "spoken_art",
+   "label": "Sound poetry",
+   "prime": false,
+   "n": 87
+  },
+  "radio_art": {
+   "group": "voice",
+   "family": "spoken_art",
+   "label": "Radio art and theatre",
+   "prime": false,
+   "n": 64
+  },
+  "birdsong": {
+   "group": "sound",
+   "family": "animals",
+   "label": "Birdsong",
+   "prime": false,
+   "n": 41
+  },
+  "animal_calls": {
+   "group": "sound",
+   "family": "animals",
+   "label": "Animal calls",
+   "prime": false,
+   "n": 120
+  },
+  "insects_frogs": {
+   "group": "sound",
+   "family": "animals",
+   "label": "Insects and frogs",
+   "prime": false,
+   "n": 118
+  },
+  "sea_mammals": {
+   "group": "sound",
+   "family": "animals",
+   "label": "Whales and dolphins",
+   "prime": false,
+   "n": 5
+  },
+  "weather_water": {
+   "group": "sound",
+   "family": "nature",
+   "label": "Weather and water",
+   "prime": false,
+   "n": 120
+  },
+  "fire_wind": {
+   "group": "sound",
+   "family": "nature",
+   "label": "Fire and wind",
+   "prime": false,
+   "n": 80
+  },
+  "field_recordings": {
+   "group": "sound",
+   "family": "nature",
+   "label": "Field recordings",
+   "prime": false,
+   "n": 127
+  },
+  "human_nonverbal": {
+   "group": "sound",
+   "family": "human_sounds",
+   "label": "Human non-speech sounds",
+   "prime": false,
+   "n": 120
+  },
+  "bells": {
+   "group": "sound",
+   "family": "tonal_nonmusic",
+   "label": "Bells",
+   "prime": false,
+   "n": 67
+  },
+  "alarms_sirens": {
+   "group": "sound",
+   "family": "tonal_nonmusic",
+   "label": "Alarms and sirens",
+   "prime": false,
+   "n": 120
+  },
+  "rhythmic_machines": {
+   "group": "sound",
+   "family": "machines",
+   "label": "Rhythmic machines",
+   "prime": false,
+   "n": 120
+  },
+  "noisy_machines": {
+   "group": "sound",
+   "family": "machines",
+   "label": "Noisy machines",
+   "prime": false,
+   "n": 120
+  },
+  "household": {
+   "group": "sound",
+   "family": "household",
+   "label": "Household sounds",
+   "prime": false,
+   "n": 120
+  },
+  "sound_effects": {
+   "group": "sound",
+   "family": "effects",
+   "label": "Sound effects",
+   "prime": false,
+   "n": 127
+  }
+ },
+ "duration": 5.0
+}
